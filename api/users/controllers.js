@@ -3,55 +3,36 @@ exports.login = (req, res) => {
 
   const {userId, pswd} = req.body;
 
-  const findUserId = (userId, cb) => {
-
-    /* find user id from db */
-    const users = require('../../data/users.json');
-    let result = null;
-    users.forEach(el => {
-      if (el.userId === userId) {
-        result = { userId: el.userId, pswd: el.pswd };
-        return;
-      } 
+  const find = (userId) => {
+    return new Promise((resolve, reject) => {
+      /* find user id from db */
+      const users = require('../../data/users.json');
+      for(let el of users) {
+        if (el.userId === userId) {
+          resolve({ userId: el.userId, pswd: el.pswd });
+          break;
+        }
+      }
+      const err = new Error('userId does not exist.');
+      reject(err);
+      
     });
-
-    cb(result);
   };
   
-  const verify = (userId, pswd, cb) => {
-    findUserId(userId, (result) => {
-
-      if ( null === result ) {
-        const err = new Error('userId does not exist.');
-        cb(err);
-        return;
-      } 
-      
+  const verify = (result) => {
+    return new Promise((resolve, reject) => {
+     
       if (result.pswd !== pswd) {
         const err = new Error('pswd does not match.');
-        cb(err);        
+        reject(err);        
         return;
       } 
 
       const msg = 'OK';
-      cb(msg);
-      }
-    );
+      resolve(msg);
+    });
   };
-
-  const p = new Promise(
-    (resolve, reject) => {
-      verify(userId, pswd, (result) => {
-        
-        if(result instanceof Error) { 
-          reject(result);
-          return;
-        } 
-        resolve(result);
-      });
-    }
-  );
-
+  
   const respond = (msg) => {
     res.json({
       success: true,
@@ -65,9 +46,25 @@ exports.login = (req, res) => {
       error: err.message
     });
   };
-
-  p.then(respond).catch(onError);
-
+  
+  /* async-await way */
+  /*
+  (async () => {
+    try {
+      const result = await find(userId);
+      const msg = await verify(result);
+      respond(msg);
+    } catch (err) {
+      onError(err);
+    }
+  }) ();
+  */
+  
+  find(userId)
+    .then(verify)
+    .then(respond)
+    .catch(onError);
+  
 };
 
 exports.create = (req, res) => {
