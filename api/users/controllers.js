@@ -1,4 +1,7 @@
 exports.login = (req, res) => {
+
+    console.log(req.body);
+
     res.send('I will serve you jwt.');
 };
 
