@@ -3,6 +3,20 @@ exports.login = (req, res) => {
 
   const {userId, pswd} = req.body;
 
+  if (userId === undefined) {
+    return res.status(403).json({
+      success: false,
+      message: 'userId is undefined'
+    });
+  }
+
+  if (pswd === undefined) {
+    return res.status(403).json({
+      success: false,
+      message: 'pswd is undefined'
+    });
+  }
+
   const find = (userId) => {
     return new Promise((resolve, reject) => {
       /* find user id from db */
@@ -24,8 +38,7 @@ exports.login = (req, res) => {
      
       if (result.pswd !== pswd) {
         const err = new Error('pswd does not match.');
-        reject(err);        
-        return;
+        return reject(err);        
       } 
 
       const msg = 'OK';
